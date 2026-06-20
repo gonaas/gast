@@ -1,4 +1,4 @@
-# ast-git
+# gast
 
 Cliente Git de escritorio, open source, inspirado en [Fork](https://git-fork.com/),
 con **gestión de worktrees** como ciudadano de primera clase.
