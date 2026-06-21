@@ -19,8 +19,6 @@ html,
   height: 100vh;
 }
 
-/* El toolbar usa el primitivo <Toolbar> (ui/ui.css). Solo queda el nombre
-   del repo, que vive dentro de Toolbar.Group. */
 .toolbar-repo {
   font-weight: 600;
   white-space: nowrap;
@@ -39,8 +37,6 @@ html,
   border-radius: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
-
-/* Los botones usan los primitivos <Button>/<IconButton> (ui/ui.css). */
 
 .error-bar {
   background: var(--red);
@@ -133,8 +129,8 @@ html,
 .sidebar {
   background: var(--bg-soft);
   overflow-y: auto;
-  border-right: 1px solid var(--border);
   min-width: 0;
+  padding-top: 8px;
 }
 
 /* Centro: split vertical (lista arriba, detalle abajo) */
@@ -162,12 +158,7 @@ ul {
   padding: 0;
 }
 
-/* --- Sidebar: repo, vistas, filtro --- */
-.sidebar-repo {
-  font-weight: 700;
-  padding: 10px 12px 6px;
-  font-size: 14px;
-}
+/* --- Sidebar: vistas, filtro --- */
 .view-items {
   padding: 0 6px;
 }
@@ -460,11 +451,11 @@ ul {
   display: block;
 }
 .commit {
-  padding: 4px 12px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  padding: 0 14px;
+  display: grid;
+  grid-template-columns: 1fr 180px 72px 150px;
+  align-items: center;
+  gap: 12px;
   overflow: hidden;
   cursor: pointer;
 }
@@ -474,25 +465,86 @@ ul {
 .commit.selected {
   background: var(--sel);
 }
-.commit-main {
+.commit-subject {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
 }
 .subject {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.commit-meta {
+.commit-author {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
   color: var(--fg-dim);
-  font-size: 11px;
-  margin-top: 2px;
 }
-.hash {
-  color: var(--yellow);
+.author-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.commit .hash {
+  color: var(--fg-dim);
+  font-size: var(--text-xs);
+}
+.commit .date {
+  color: var(--fg-dim);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* Avatar de autor */
+.ui-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: var(--radius-full);
+  color: #fff;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Ref pills (rama actual, remoto, local, tag) */
+.ref-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  max-width: 220px;
+  padding: 1px 7px 1px 5px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ref-pill svg {
+  flex: none;
+}
+.ref-current {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.ref-remote {
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary);
+}
+.ref-local {
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+}
+.ref-tag {
+  background: var(--color-warn-soft);
+  color: var(--color-warn);
 }
 
 /* --- Vista de cambios (working tree) --- */

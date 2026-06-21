@@ -23,11 +23,7 @@ pub fn conflict_state(backend: State<'_, Backend>, repo: String) -> Result<Confl
 }
 
 #[tauri::command]
-pub fn conflict_content(
-    backend: State<'_, Backend>,
-    repo: String,
-    path: String,
-) -> Result<String> {
+pub fn conflict_content(backend: State<'_, Backend>, repo: String, path: String) -> Result<String> {
     use_case::conflict_content(backend.integration.as_ref(), &PathBuf::from(repo), &path)
 }
 

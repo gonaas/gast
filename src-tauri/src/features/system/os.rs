@@ -1,8 +1,8 @@
 use super::model::Target;
 use super::port::SystemPort;
-use crate::shared::error::Result;
 #[cfg(target_os = "macos")]
 use crate::shared::error::AppError;
+use crate::shared::error::Result;
 #[cfg(target_os = "macos")]
 use std::process::Command;
 

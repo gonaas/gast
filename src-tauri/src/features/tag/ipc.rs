@@ -19,14 +19,16 @@ pub fn create_tag(
     message: String,
     target: String,
 ) -> Result<Vec<String>> {
-    use_case::create(backend.tag.as_ref(), &PathBuf::from(repo), &name, &message, &target)
+    use_case::create(
+        backend.tag.as_ref(),
+        &PathBuf::from(repo),
+        &name,
+        &message,
+        &target,
+    )
 }
 
 #[tauri::command]
-pub fn delete_tag(
-    backend: State<'_, Backend>,
-    repo: String,
-    name: String,
-) -> Result<Vec<String>> {
+pub fn delete_tag(backend: State<'_, Backend>, repo: String, name: String) -> Result<Vec<String>> {
     use_case::delete(backend.tag.as_ref(), &PathBuf::from(repo), &name)
 }

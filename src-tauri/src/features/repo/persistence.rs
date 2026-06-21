@@ -20,7 +20,6 @@ impl RecentReposStore for RecentReposJson {
     fn load(&self) -> Result<Vec<RecentRepo>> {
         match std::fs::read_to_string(&self.file) {
             Ok(text) => serde_json::from_str(&text).map_err(|e| AppError::Spawn(e.to_string())),
-            // Aún no hay fichero (primer arranque): lista vacía, no es un error.
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Vec::new()),
             Err(e) => Err(AppError::Spawn(e.to_string())),
         }
@@ -41,7 +40,6 @@ mod tests {
     use super::*;
 
     fn temp_file(tag: &str) -> PathBuf {
-        // Único por proceso y test para no pisar otros runs en paralelo.
         std::env::temp_dir().join(format!("ast-git-{}-{}.json", tag, std::process::id()))
     }
 

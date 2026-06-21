@@ -4,7 +4,6 @@ use super::model::{RecentRepo, Repo};
 use super::port::{RecentReposStore, RepoPort};
 use crate::shared::error::Result;
 
-/// Máximo de repos recientes que se conservan.
 const MAX_RECENT: usize = 15;
 
 /// Abre un repo (lo valida con git) y lo registra como reciente. Compone los
@@ -48,8 +47,6 @@ mod tests {
     use super::*;
     use std::sync::Mutex;
 
-    // Store en memoria: ejercita la lógica de negocio sin tocar disco.
-    // `Mutex` (no `RefCell`) porque el puerto es `Send + Sync`.
     #[derive(Default)]
     struct InMemoryStore {
         data: Mutex<Vec<RecentRepo>>,
@@ -65,7 +62,6 @@ mod tests {
         }
     }
 
-    // Fake del puerto git: devuelve un Repo fijo a partir del path pedido.
     struct FakeRepoPort;
     impl RepoPort for FakeRepoPort {
         fn open(&self, path: &Path) -> Result<Repo> {
@@ -91,7 +87,6 @@ mod tests {
         let store = InMemoryStore::default();
         record(&store, repo("/a")).unwrap();
         record(&store, repo("/b")).unwrap();
-        // Reabrir /a debe moverlo al frente sin duplicar.
         let list = record(&store, repo("/a")).unwrap();
 
         let paths: Vec<&str> = list.iter().map(|r| r.path.as_str()).collect();
@@ -106,7 +101,6 @@ mod tests {
         }
         let list = store.load().unwrap();
         assert_eq!(list.len(), MAX_RECENT);
-        // El último insertado queda al frente.
         assert_eq!(list[0].path, format!("/r{}", MAX_RECENT + 4));
     }
 

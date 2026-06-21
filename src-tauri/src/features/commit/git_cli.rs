@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use super::model::Commit;
+use super::model::{Commit, CommitRef, RefKind};
 use super::port::CommitPort;
 use crate::features::working_tree::model::FileStatus;
 use crate::shared::error::Result;
@@ -37,7 +37,10 @@ impl CommitPort for CommitGit {
     }
 
     fn untracked_diff(&self, repo: &Path, path: &str) -> Result<String> {
-        git_lenient(repo, ["diff", "--no-color", "--no-index", "/dev/null", path])
+        git_lenient(
+            repo,
+            ["diff", "--no-color", "--no-index", "/dev/null", path],
+        )
     }
 
     fn commit_files(&self, repo: &Path, hash: &str) -> Result<Vec<FileStatus>> {
@@ -68,8 +71,9 @@ pub fn parse_commits(out: &str) -> Vec<Commit> {
         let parents = f[2].split_whitespace().map(str::to_string).collect();
         let refs = f[7]
             .split(',')
-            .map(|s| s.trim().to_string())
+            .map(str::trim)
             .filter(|s| !s.is_empty())
+            .map(classify_ref)
             .collect();
 
         commits.push(Commit {
@@ -86,6 +90,36 @@ pub fn parse_commits(out: &str) -> Vec<Commit> {
     commits
 }
 
+/// Clasifica un token de decoración de `git log %D` en una ref tipada.
+/// Es el único sitio donde viven los literales del formato de git
+/// (`tag:`, `HEAD -> `, `/`); el resto de la app trabaja con `RefKind`.
+fn classify_ref(raw: &str) -> CommitRef {
+    if let Some(name) = raw.strip_prefix("tag:") {
+        return CommitRef {
+            kind: RefKind::Tag,
+            name: name.trim().to_string(),
+        };
+    }
+    // "HEAD -> main": la rama con checkout actual. Prefijo exacto para no
+    // confundir una rama llamada p. ej. "headless" con HEAD.
+    if let Some(name) = raw.strip_prefix("HEAD -> ") {
+        return CommitRef {
+            kind: RefKind::Current,
+            name: name.to_string(),
+        };
+    }
+    if raw.contains('/') {
+        return CommitRef {
+            kind: RefKind::Remote,
+            name: raw.to_string(),
+        };
+    }
+    CommitRef {
+        kind: RefKind::Local,
+        name: raw.to_string(),
+    }
+}
+
 /// Parsea la salida de `git show --name-status`. Cada línea es
 /// `<estado>\t<path>` (o `R100\t<viejo>\t<nuevo>` en renombrados); nos
 /// quedamos con la primera letra del estado y el último campo como path.
@@ -95,7 +129,7 @@ fn parse_name_status(out: &str) -> Vec<FileStatus> {
         .filter_map(|line| {
             let mut cols = line.split('\t');
             let status = cols.next()?;
-            let path = cols.last()?;
+            let path = cols.next_back()?;
             if path.is_empty() {
                 return None;
             }
@@ -112,8 +146,6 @@ fn parse_name_status(out: &str) -> Vec<FileStatus> {
 mod tests {
     use super::*;
 
-    // Reproduce la salida real de:
-    // git log --all --pretty=format:'%H%x1f%h%x1f%P%x1f%an%x1f%ae%x1f%at%x1f%s%x1f%D%x1e'
     const SAMPLE: &str = "561646d\u{1f}561646d\u{1f}87643f9\u{1f}Tester\u{1f}t@t.com\u{1f}1781779170\u{1f}en feature\u{1f}feature\u{1e}\n\
 87643f9\u{1f}87643f9\u{1f}\u{1f}Tester\u{1f}t@t.com\u{1f}1781779170\u{1f}primer commit\u{1f}HEAD -> main, origin/main\u{1e}";
 
@@ -128,7 +160,7 @@ mod tests {
         let c = &parse_commits(SAMPLE)[0];
         assert_eq!(c.subject, "en feature");
         assert_eq!(c.parents, vec!["87643f9"]);
-        assert_eq!(c.refs, vec!["feature"]);
+        assert_eq!(c.refs, vec![local("feature")]);
         assert_eq!(c.timestamp, 1781779170);
     }
 
@@ -136,7 +168,57 @@ mod tests {
     fn root_commit_has_no_parents_and_splits_refs() {
         let c = &parse_commits(SAMPLE)[1];
         assert!(c.parents.is_empty());
-        assert_eq!(c.refs, vec!["HEAD -> main", "origin/main"]);
+        assert_eq!(
+            c.refs,
+            vec![
+                CommitRef {
+                    kind: RefKind::Current,
+                    name: "main".into()
+                },
+                CommitRef {
+                    kind: RefKind::Remote,
+                    name: "origin/main".into()
+                },
+            ]
+        );
+    }
+
+    fn local(name: &str) -> CommitRef {
+        CommitRef {
+            kind: RefKind::Local,
+            name: name.into(),
+        }
+    }
+
+    #[test]
+    fn classifies_each_ref_kind() {
+        assert_eq!(
+            classify_ref("tag: v1.0"),
+            CommitRef {
+                kind: RefKind::Tag,
+                name: "v1.0".into()
+            }
+        );
+        assert_eq!(
+            classify_ref("HEAD -> main"),
+            CommitRef {
+                kind: RefKind::Current,
+                name: "main".into()
+            }
+        );
+        assert_eq!(
+            classify_ref("origin/main"),
+            CommitRef {
+                kind: RefKind::Remote,
+                name: "origin/main".into()
+            }
+        );
+        assert_eq!(classify_ref("feature"), local("feature"));
+    }
+
+    #[test]
+    fn branch_containing_head_is_not_current() {
+        assert_eq!(classify_ref("headless"), local("headless"));
     }
 
     #[test]

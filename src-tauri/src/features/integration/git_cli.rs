@@ -25,7 +25,6 @@ impl IntegrationPort for IntegrationGit {
             "none"
         };
 
-        // Archivos sin fusionar (diff-filter=U).
         let out = git(repo, ["diff", "--name-only", "--diff-filter=U"])?;
         let files = out
             .lines()

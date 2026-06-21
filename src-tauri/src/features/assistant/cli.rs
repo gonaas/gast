@@ -93,7 +93,10 @@ fn find_claude() -> Option<PathBuf> {
         }
     }
     let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".into());
-    if let Ok(out) = Command::new(shell).args(["-lc", "command -v claude"]).output() {
+    if let Ok(out) = Command::new(shell)
+        .args(["-lc", "command -v claude"])
+        .output()
+    {
         if out.status.success() {
             let path = String::from_utf8_lossy(&out.stdout).trim().to_string();
             if !path.is_empty() {

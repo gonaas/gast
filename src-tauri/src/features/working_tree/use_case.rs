@@ -4,8 +4,6 @@ use super::model::RepoStatus;
 use super::port::WorkingTreePort;
 use crate::shared::error::Result;
 
-// Tras cada mutación se relee el estado: es lo que el frontend pinta de vuelta.
-
 pub fn status(port: &dyn WorkingTreePort, repo: &Path) -> Result<RepoStatus> {
     port.status(repo)
 }
@@ -40,7 +38,6 @@ mod tests {
     use super::*;
     use std::sync::Mutex;
 
-    // Puerto falso que registra llamadas; `Mutex` porque el puerto es Send+Sync.
     #[derive(Default)]
     struct FakePort {
         calls: Mutex<Vec<&'static str>>,

@@ -31,7 +31,6 @@ impl TagPort for TagGit {
     }
 }
 
-/// Una línea no vacía por elemento. Pura/testeable.
 fn parse_lines(out: &str) -> Vec<String> {
     out.lines()
         .map(str::trim)

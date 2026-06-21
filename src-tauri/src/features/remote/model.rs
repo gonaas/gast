@@ -18,7 +18,6 @@ pub enum PullStrategy {
 }
 
 impl PullStrategy {
-    /// Bandera de `git pull` correspondiente.
     pub fn flag(self) -> &'static str {
         match self {
             Self::Merge => "--no-rebase",

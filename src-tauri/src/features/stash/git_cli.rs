@@ -10,7 +10,6 @@ pub struct StashGit;
 
 impl StashPort for StashGit {
     fn list(&self, repo: &Path) -> Result<Vec<Stash>> {
-        // %gd = selector del reflog (stash@{N}); %gs = subject del reflog.
         let out = git(repo, ["stash", "list", &format!("--format=%gd{SEP}%gs")])?;
         Ok(parse_stashes(&out))
     }
