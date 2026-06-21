@@ -37,7 +37,12 @@ pub fn remove_worktree(
     path: String,
     force: bool,
 ) -> Result<Vec<Worktree>> {
-    use_case::remove(backend.worktree.as_ref(), &PathBuf::from(repo), &path, force)
+    use_case::remove(
+        backend.worktree.as_ref(),
+        &PathBuf::from(repo),
+        &path,
+        force,
+    )
 }
 
 #[tauri::command]

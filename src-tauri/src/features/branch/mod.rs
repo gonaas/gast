@@ -1,5 +1,3 @@
-//! Slice branch: listar, conmutar y administrar ramas.
-
 pub mod git_cli;
 pub mod ipc;
 pub mod model;

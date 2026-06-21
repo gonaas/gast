@@ -34,5 +34,10 @@ pub fn commit(
     message: String,
     amend: bool,
 ) -> Result<RepoStatus> {
-    use_case::commit(backend.working_tree.as_ref(), &PathBuf::from(repo), &message, amend)
+    use_case::commit(
+        backend.working_tree.as_ref(),
+        &PathBuf::from(repo),
+        &message,
+        amend,
+    )
 }

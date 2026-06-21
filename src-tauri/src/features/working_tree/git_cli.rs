@@ -45,7 +45,6 @@ pub fn parse_status(out: &str) -> RepoStatus {
 
     for line in out.lines() {
         if let Some(rest) = line.strip_prefix("## ") {
-            // p.ej. "main...origin/main [ahead 1]" -> "main"
             branch = rest.split(['.', ' ']).next().unwrap_or(rest).to_string();
             continue;
         }
@@ -56,7 +55,6 @@ pub fn parse_status(out: &str) -> RepoStatus {
         let mut chars = xy.chars();
         let index_status = chars.next().unwrap_or(' ').to_string();
         let worktree_status = chars.next().unwrap_or(' ').to_string();
-        // En renombrados el path es "viejo -> nuevo"; nos quedamos con el nuevo.
         let path = path.trim_start();
         let path = path.split(" -> ").last().unwrap_or(path).to_string();
 

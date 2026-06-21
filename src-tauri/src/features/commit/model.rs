@@ -10,7 +10,30 @@ pub struct Commit {
     pub author_email: String,
     pub timestamp: i64,
     pub subject: String,
-    pub refs: Vec<String>,
+    pub refs: Vec<CommitRef>,
+}
+
+/// Tipo de una ref que decora un commit. Sustituye al matcheo de
+/// substrings crudos ("tag:", "HEAD", "/") en el frontend: la
+/// clasificación se hace una sola vez aquí y el front renderiza por `kind`.
+#[derive(Serialize, Debug, PartialEq, Clone, Copy)]
+#[serde(rename_all = "camelCase")]
+pub enum RefKind {
+    /// Etiqueta (`tag: v1.0`).
+    Tag,
+    /// Rama con checkout actual (`HEAD -> main`).
+    Current,
+    /// Rama de remoto (`origin/main`).
+    Remote,
+    /// Rama local sin checkout.
+    Local,
+}
+
+#[derive(Serialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct CommitRef {
+    pub kind: RefKind,
+    pub name: String,
 }
 
 #[derive(Serialize, Debug, PartialEq)]
@@ -30,13 +53,13 @@ pub fn layout(commits: &[Commit]) -> Vec<GraphRow> {
     for c in commits {
         let mut col: Option<usize> = None;
         let mut merges = Vec::new();
-        for j in 0..lanes.len() {
-            if lanes[j].as_deref() == Some(c.hash.as_str()) {
+        for (j, lane) in lanes.iter_mut().enumerate() {
+            if lane.as_deref() == Some(c.hash.as_str()) {
                 match col {
                     None => col = Some(j),
                     Some(_) => {
                         merges.push(j);
-                        lanes[j] = None;
+                        *lane = None;
                     }
                 }
             }
@@ -145,7 +168,7 @@ mod tests {
         let a = rows.iter().find(|r| r.hash == "A").unwrap();
         assert_eq!(a.merges, vec![1]);
         assert_eq!(a.col, 0);
-        assert!(a.links_down.is_empty()); // raíz: nada baja.
+        assert!(a.links_down.is_empty());
     }
 
     #[test]

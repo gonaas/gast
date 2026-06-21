@@ -5,7 +5,6 @@ use super::port::WorktreePort;
 use crate::shared::error::Result;
 use crate::shared::runner::git;
 
-/// Adaptador de salida: implementa `WorktreePort` haciendo shell-out a `git`.
 pub struct WorktreeGit;
 
 impl WorktreePort for WorktreeGit {
@@ -28,7 +27,10 @@ impl WorktreePort for WorktreeGit {
             }
             git(repo, args)?;
         } else {
-            git(repo, ["worktree", "add", spec.path.as_str(), spec.branch.as_str()])?;
+            git(
+                repo,
+                ["worktree", "add", spec.path.as_str(), spec.branch.as_str()],
+            )?;
         }
         Ok(())
     }

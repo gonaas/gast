@@ -4,9 +4,6 @@ use super::model::{NewWorktree, Worktree};
 use super::port::WorktreePort;
 use crate::shared::error::Result;
 
-// Casos de uso: orquestan el puerto. Tras una mutación devuelven la lista
-// actualizada, que es lo que el frontend espera tras la operación.
-
 pub fn list(port: &dyn WorktreePort, repo: &Path) -> Result<Vec<Worktree>> {
     port.list(repo)
 }
@@ -37,8 +34,6 @@ mod tests {
     use crate::shared::error::AppError;
     use std::sync::Mutex;
 
-    // Puerto falso: registra el orden de llamadas. Sin git ni FS de por medio.
-    // `Mutex` (no `RefCell`) porque el puerto es `Send + Sync`.
     #[derive(Default)]
     struct FakePort {
         calls: Mutex<Vec<&'static str>>,
@@ -96,7 +91,6 @@ mod tests {
     fn add_mutates_then_relists() {
         let port = FakePort::default();
         let out = add(&port, Path::new("/repo"), spec()).unwrap();
-        // El caso de uso compone: primero muta, luego relee.
         assert_eq!(port.calls(), vec!["add", "list"]);
         assert_eq!(out.len(), 1);
     }
@@ -109,7 +103,6 @@ mod tests {
         };
         let err = add(&port, Path::new("/repo"), spec());
         assert!(err.is_err());
-        // Si la mutación falla, no se vuelve a listar (la `?` corta antes).
         assert_eq!(port.calls(), vec!["add"]);
     }
 

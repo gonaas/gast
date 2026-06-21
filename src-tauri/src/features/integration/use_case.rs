@@ -25,7 +25,11 @@ pub fn resolve_ours(port: &dyn IntegrationPort, repo: &Path, path: &str) -> Resu
     port.conflict_state(repo)
 }
 
-pub fn resolve_theirs(port: &dyn IntegrationPort, repo: &Path, path: &str) -> Result<ConflictState> {
+pub fn resolve_theirs(
+    port: &dyn IntegrationPort,
+    repo: &Path,
+    path: &str,
+) -> Result<ConflictState> {
     port.resolve_theirs(repo, path)?;
     port.conflict_state(repo)
 }

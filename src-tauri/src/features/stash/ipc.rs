@@ -13,7 +13,11 @@ pub fn list_stashes(backend: State<'_, Backend>, repo: String) -> Result<Vec<Sta
 }
 
 #[tauri::command]
-pub fn save_stash(backend: State<'_, Backend>, repo: String, message: String) -> Result<Vec<Stash>> {
+pub fn save_stash(
+    backend: State<'_, Backend>,
+    repo: String,
+    message: String,
+) -> Result<Vec<Stash>> {
     use_case::save(backend.stash.as_ref(), &PathBuf::from(repo), &message)
 }
 
@@ -27,7 +31,11 @@ pub fn apply_stash(
 }
 
 #[tauri::command]
-pub fn pop_stash(backend: State<'_, Backend>, repo: String, reference: String) -> Result<Vec<Stash>> {
+pub fn pop_stash(
+    backend: State<'_, Backend>,
+    repo: String,
+    reference: String,
+) -> Result<Vec<Stash>> {
     use_case::pop(backend.stash.as_ref(), &PathBuf::from(repo), &reference)
 }
 

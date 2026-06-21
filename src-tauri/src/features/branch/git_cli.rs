@@ -10,8 +10,6 @@ pub struct BranchGit;
 
 impl BranchPort for BranchGit {
     fn list(&self, repo: &Path) -> Result<Vec<Branch>> {
-        // `git branch --format` no interpreta %x1f, así que metemos el byte 0x1f
-        // literal en la cadena de formato como separador de campos.
         let fmt = format!(
             "%(HEAD){SEP}%(refname){SEP}%(refname:short){SEP}%(objectname){SEP}%(upstream:short){SEP}%(upstream:track)"
         );
@@ -49,7 +47,6 @@ impl BranchPort for BranchGit {
     }
 }
 
-/// Parsea la salida de `git branch --format` con separador 0x1f. Pura/testeable.
 pub fn parse_branches(out: &str) -> Vec<Branch> {
     let mut branches = Vec::new();
     for line in out.lines() {
@@ -60,7 +57,6 @@ pub fn parse_branches(out: &str) -> Vec<Branch> {
         if f.len() < 6 {
             continue;
         }
-        // Refs simbólicas (p.ej. "origin/HEAD -> origin/main") se descartan.
         if f[2].contains("->") {
             continue;
         }
@@ -80,8 +76,6 @@ pub fn parse_branches(out: &str) -> Vec<Branch> {
     branches
 }
 
-/// Parsea el campo `%(upstream:track)`, que git emite como `[ahead 1, behind 2]`,
-/// `[ahead 3]`, `[behind 4]`, `[gone]` o vacío. Pura/testeable.
 fn parse_track(s: &str) -> (Option<u32>, Option<u32>, bool) {
     let s = s.trim();
     if s == "[gone]" {
@@ -105,8 +99,6 @@ fn parse_track(s: &str) -> (Option<u32>, Option<u32>, bool) {
 mod tests {
     use super::*;
 
-    // Salida real de `git branch --all --format=...` con 0x1f como separador.
-    // Campos: HEAD, refname, refname:short, objectname, upstream:short, upstream:track.
     const SAMPLE: &str = " \u{1f}refs/heads/feature\u{1f}feature\u{1f}561646d2\u{1f}\u{1f}\n\
 *\u{1f}refs/heads/main\u{1f}main\u{1f}87643f92\u{1f}origin/main\u{1f}[ahead 2, behind 1]\n\
  \u{1f}refs/heads/stale\u{1f}stale\u{1f}aaaaaaaa\u{1f}origin/stale\u{1f}[gone]\n\
@@ -116,7 +108,6 @@ mod tests {
     #[test]
     fn skips_symbolic_ref() {
         let b = parse_branches(SAMPLE);
-        // feature, main, stale, origin/main (origin/HEAD simbólica se descarta).
         assert_eq!(b.len(), 4);
     }
 
@@ -164,7 +155,10 @@ mod tests {
         assert_eq!(parse_track("[gone]"), (None, None, true));
         assert_eq!(parse_track("[ahead 5]"), (Some(5), None, false));
         assert_eq!(parse_track("[behind 3]"), (None, Some(3), false));
-        assert_eq!(parse_track("[ahead 2, behind 7]"), (Some(2), Some(7), false));
+        assert_eq!(
+            parse_track("[ahead 2, behind 7]"),
+            (Some(2), Some(7), false)
+        );
     }
 
     #[test]
