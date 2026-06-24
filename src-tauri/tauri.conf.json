@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "ast-git",
+  "productName": "gast",
   "version": "0.1.0",
   "identifier": "dev.astgit.app",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "ast-git",
+        "title": "gast",
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
         "width": 1280,

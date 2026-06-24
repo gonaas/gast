@@ -9,6 +9,12 @@ export interface RecentRepo {
   name: string;
 }
 
+// Una pestaña de repositorio abierto en la barra superior (estado de UI).
+export interface OpenTab {
+  path: string;
+  name: string;
+}
+
 export type RefKind = "tag" | "current" | "remote" | "local";
 
 export interface CommitRef {

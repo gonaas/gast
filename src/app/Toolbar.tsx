@@ -112,7 +112,7 @@ export function Toolbar({ onOpen }: { onOpen: () => void }) {
                 </Button.Icon>
                 <Button.Label>Open in</Button.Label>
               </Button>
-              <Button onClick={refresh} disabled={loading}>
+              <Button onClick={() => refresh()} disabled={loading}>
                 <Button.Icon>
                   <IconRefresh />
                 </Button.Icon>

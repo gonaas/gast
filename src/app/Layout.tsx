@@ -5,7 +5,7 @@ import { ResizeHandle } from "@/shared/ui";
 import { Sidebar } from "./Sidebar";
 import { DetailPanel } from "./DetailPanel";
 import { CommitList } from "@/features/commit/components/CommitList";
-import { ChangesView } from "@/features/working-tree/components/ChangesView";
+import { ChangesWorkspace } from "@/features/working-tree/components/ChangesWorkspace";
 
 export function Layout() {
   const view = useStore((s) => s.view);
@@ -16,10 +16,18 @@ export function Layout() {
       <Sidebar />
       <ResizeHandle onPointerDown={sidebar.onPointerDown} onDoubleClick={sidebar.reset} />
       <main className="center">
-        <div className="main-top">{view === "history" ? <CommitList /> : <ChangesView />}</div>
-        <div className="main-bottom">
-          <DetailPanel />
-        </div>
+        {view === "history" ? (
+          <>
+            <div className="main-top">
+              <CommitList />
+            </div>
+            <div className="main-bottom">
+              <DetailPanel />
+            </div>
+          </>
+        ) : (
+          <ChangesWorkspace />
+        )}
       </main>
     </div>
   );

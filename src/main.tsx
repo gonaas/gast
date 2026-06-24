@@ -4,6 +4,7 @@ import App from "./app/App";
 import "@fontsource-variable/inter";
 import "@/shared/ui/tokens.css";
 import "@/shared/ui/ui.css";
+import "react-diff-view/style/index.css";
 import "./styles.css";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

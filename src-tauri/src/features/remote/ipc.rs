@@ -5,53 +5,65 @@ use tauri::State;
 use super::model::{PullStrategy, Remote};
 use super::use_case;
 use crate::shared::error::Result;
+use crate::shared::runner::blocking;
 use crate::Backend;
 
 #[tauri::command]
-pub fn fetch(backend: State<'_, Backend>, repo: String) -> Result<String> {
-    use_case::fetch(backend.remote.as_ref(), &PathBuf::from(repo))
+pub async fn fetch(backend: State<'_, Backend>, repo: String) -> Result<String> {
+    let remote = backend.remote.clone();
+    blocking(move || use_case::fetch(remote.as_ref(), &PathBuf::from(repo))).await
 }
 
 #[tauri::command]
-pub fn pull(backend: State<'_, Backend>, repo: String, strategy: PullStrategy) -> Result<String> {
-    use_case::pull(backend.remote.as_ref(), &PathBuf::from(repo), strategy)
+pub async fn pull(
+    backend: State<'_, Backend>,
+    repo: String,
+    strategy: PullStrategy,
+) -> Result<String> {
+    let remote = backend.remote.clone();
+    blocking(move || use_case::pull(remote.as_ref(), &PathBuf::from(repo), strategy)).await
 }
 
 #[tauri::command]
-pub fn push(backend: State<'_, Backend>, repo: String) -> Result<String> {
-    use_case::push(backend.remote.as_ref(), &PathBuf::from(repo))
+pub async fn push(backend: State<'_, Backend>, repo: String) -> Result<String> {
+    let remote = backend.remote.clone();
+    blocking(move || use_case::push(remote.as_ref(), &PathBuf::from(repo))).await
 }
 
 #[tauri::command]
-pub fn list_remotes(backend: State<'_, Backend>, repo: String) -> Result<Vec<Remote>> {
-    use_case::list(backend.remote.as_ref(), &PathBuf::from(repo))
+pub async fn list_remotes(backend: State<'_, Backend>, repo: String) -> Result<Vec<Remote>> {
+    let remote = backend.remote.clone();
+    blocking(move || use_case::list(remote.as_ref(), &PathBuf::from(repo))).await
 }
 
 #[tauri::command]
-pub fn add_remote(
+pub async fn add_remote(
     backend: State<'_, Backend>,
     repo: String,
     name: String,
     url: String,
 ) -> Result<Vec<Remote>> {
-    use_case::add(backend.remote.as_ref(), &PathBuf::from(repo), &name, &url)
+    let remote = backend.remote.clone();
+    blocking(move || use_case::add(remote.as_ref(), &PathBuf::from(repo), &name, &url)).await
 }
 
 #[tauri::command]
-pub fn remove_remote(
+pub async fn remove_remote(
     backend: State<'_, Backend>,
     repo: String,
     name: String,
 ) -> Result<Vec<Remote>> {
-    use_case::remove(backend.remote.as_ref(), &PathBuf::from(repo), &name)
+    let remote = backend.remote.clone();
+    blocking(move || use_case::remove(remote.as_ref(), &PathBuf::from(repo), &name)).await
 }
 
 #[tauri::command]
-pub fn rename_remote(
+pub async fn rename_remote(
     backend: State<'_, Backend>,
     repo: String,
     old: String,
     new: String,
 ) -> Result<Vec<Remote>> {
-    use_case::rename(backend.remote.as_ref(), &PathBuf::from(repo), &old, &new)
+    let remote = backend.remote.clone();
+    blocking(move || use_case::rename(remote.as_ref(), &PathBuf::from(repo), &old, &new)).await
 }

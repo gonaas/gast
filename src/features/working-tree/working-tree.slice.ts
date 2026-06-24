@@ -10,6 +10,8 @@ export interface WorkingTreeSlice {
   selectFile: (path: string, staged: boolean, untracked: boolean) => Promise<void>;
   stageFile: (path: string) => Promise<void>;
   unstageFile: (path: string) => Promise<void>;
+  stageAll: () => Promise<void>;
+  unstageAll: () => Promise<void>;
   discardFile: (path: string) => Promise<void>;
   commit: (message: string, amend: boolean) => Promise<void>;
 }
@@ -50,6 +52,39 @@ export const createWorkingTreeSlice: StateCreator<Store, [], [], WorkingTreeSlic
     if (!repo) return;
     try {
       set({ status: await api.unstageFile(repo.path, path) });
+    } catch (e) {
+      set({ error: String(e) });
+    }
+  },
+
+  stageAll: async () => {
+    const repo = get().repo;
+    const files = get().status?.files;
+    if (!repo || !files) return;
+    // Unstaged (modificados sin stage) + untracked.
+    const paths = files
+      .filter((f) => f.indexStatus === "?" || f.worktreeStatus !== " ")
+      .map((f) => f.path);
+    try {
+      let status = get().status;
+      for (const path of paths) status = await api.stageFile(repo.path, path);
+      set({ status });
+    } catch (e) {
+      set({ error: String(e) });
+    }
+  },
+
+  unstageAll: async () => {
+    const repo = get().repo;
+    const files = get().status?.files;
+    if (!repo || !files) return;
+    const paths = files
+      .filter((f) => f.indexStatus !== " " && f.indexStatus !== "?")
+      .map((f) => f.path);
+    try {
+      let status = get().status;
+      for (const path of paths) status = await api.unstageFile(repo.path, path);
+      set({ status });
     } catch (e) {
       set({ error: String(e) });
     }

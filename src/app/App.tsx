@@ -2,21 +2,26 @@ import { useEffect } from "react";
 import { useStore } from "@/shared/store";
 import { pickRepoFolder } from "@/shared/api/dialog";
 import { ConflictBanner } from "@/features/integration/components/ConflictBanner";
+import { TabBar } from "./TabBar";
 import { Toolbar } from "./Toolbar";
 import { Layout } from "./Layout";
 import { EmptyState } from "./EmptyState";
+import { useRepoWatcher } from "./useRepoWatcher";
 
-// Composition root: cablea toolbar, banner de conflictos y layout/empty.
 export default function App() {
   const repo = useStore((s) => s.repo);
   const error = useStore((s) => s.error);
   const clearError = useStore((s) => s.clearError);
   const openRepo = useStore((s) => s.openRepo);
   const loadRecentRepos = useStore((s) => s.loadRecentRepos);
+  const restoreOpenTabs = useStore((s) => s.restoreOpenTabs);
+
+  useRepoWatcher();
 
   useEffect(() => {
     loadRecentRepos();
-  }, [loadRecentRepos]);
+    restoreOpenTabs();
+  }, [loadRecentRepos, restoreOpenTabs]);
 
   async function handleOpen() {
     const path = await pickRepoFolder();
@@ -25,6 +30,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <TabBar onOpen={handleOpen} />
       <Toolbar onOpen={handleOpen} />
 
       {error && (

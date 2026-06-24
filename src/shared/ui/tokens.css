@@ -12,6 +12,9 @@
   /* bordes */
   --color-border: #e5e7eb;
   --color-border-strong: #d1d5db;
+  /* franja de pestañas (titlebar estilo Fork) */
+  --color-tabbar: #dfe1e6;
+  --color-tabbar-hover: #e9ebee;
   /* primario */
   --color-primary: #2563eb;
   --color-primary-hover: #1d4ed8;
@@ -51,5 +54,5 @@
   --sel: var(--color-primary-soft);
 
   font-family: var(--font-sans);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
 }

@@ -5,57 +5,64 @@ use tauri::State;
 use super::model::Branch;
 use super::use_case;
 use crate::shared::error::Result;
+use crate::shared::runner::blocking;
 use crate::Backend;
 
 #[tauri::command]
-pub fn list_branches(backend: State<'_, Backend>, repo: String) -> Result<Vec<Branch>> {
-    use_case::list(backend.branch.as_ref(), &PathBuf::from(repo))
+pub async fn list_branches(backend: State<'_, Backend>, repo: String) -> Result<Vec<Branch>> {
+    let branch = backend.branch.clone();
+    blocking(move || use_case::list(branch.as_ref(), &PathBuf::from(repo))).await
 }
 
 #[tauri::command]
-pub fn checkout_branch(
+pub async fn checkout_branch(
     backend: State<'_, Backend>,
     repo: String,
     name: String,
 ) -> Result<Vec<Branch>> {
-    use_case::switch(backend.branch.as_ref(), &PathBuf::from(repo), &name)
+    let branch = backend.branch.clone();
+    blocking(move || use_case::switch(branch.as_ref(), &PathBuf::from(repo), &name)).await
 }
 
 #[tauri::command]
-pub fn checkout_commit(
+pub async fn checkout_commit(
     backend: State<'_, Backend>,
     repo: String,
     hash: String,
 ) -> Result<Vec<Branch>> {
-    use_case::switch_detached(backend.branch.as_ref(), &PathBuf::from(repo), &hash)
+    let branch = backend.branch.clone();
+    blocking(move || use_case::switch_detached(branch.as_ref(), &PathBuf::from(repo), &hash)).await
 }
 
 #[tauri::command]
-pub fn create_branch(
+pub async fn create_branch(
     backend: State<'_, Backend>,
     repo: String,
     name: String,
     start: String,
 ) -> Result<Vec<Branch>> {
-    use_case::create(backend.branch.as_ref(), &PathBuf::from(repo), &name, &start)
+    let branch = backend.branch.clone();
+    blocking(move || use_case::create(branch.as_ref(), &PathBuf::from(repo), &name, &start)).await
 }
 
 #[tauri::command]
-pub fn delete_branch(
+pub async fn delete_branch(
     backend: State<'_, Backend>,
     repo: String,
     name: String,
     force: bool,
 ) -> Result<Vec<Branch>> {
-    use_case::delete(backend.branch.as_ref(), &PathBuf::from(repo), &name, force)
+    let branch = backend.branch.clone();
+    blocking(move || use_case::delete(branch.as_ref(), &PathBuf::from(repo), &name, force)).await
 }
 
 #[tauri::command]
-pub fn rename_branch(
+pub async fn rename_branch(
     backend: State<'_, Backend>,
     repo: String,
     old: String,
     new: String,
 ) -> Result<Vec<Branch>> {
-    use_case::rename(backend.branch.as_ref(), &PathBuf::from(repo), &old, &new)
+    let branch = backend.branch.clone();
+    blocking(move || use_case::rename(branch.as_ref(), &PathBuf::from(repo), &old, &new)).await
 }

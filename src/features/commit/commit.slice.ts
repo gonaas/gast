@@ -21,7 +21,7 @@ export const createCommitSlice: StateCreator<Store, [], [], CommitSlice> = (set,
   commitFiles: [],
 
   loadHistory: async (repoPath) => {
-    const [commits, graph] = await Promise.all([api.commitLog(repoPath), api.commitGraph(repoPath)]);
+    const { commits, graph } = await api.commitHistory(repoPath);
     set({ commits, graph });
   },
 
