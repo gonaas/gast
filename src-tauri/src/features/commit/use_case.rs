@@ -1,17 +1,15 @@
 use std::path::Path;
 
-use super::model::{layout, Commit, GraphRow};
+use super::model::{layout, History};
 use super::port::CommitPort;
 use crate::features::working_tree::model::FileStatus;
 use crate::shared::error::Result;
 
-pub fn log(port: &dyn CommitPort, repo: &Path, limit: usize) -> Result<Vec<Commit>> {
-    port.log(repo, limit)
-}
-
-pub fn commit_graph(port: &dyn CommitPort, repo: &Path, limit: usize) -> Result<Vec<GraphRow>> {
+/// Lee el historial una sola vez y deriva el grafo de los mismos commits.
+pub fn history(port: &dyn CommitPort, repo: &Path, limit: usize) -> Result<History> {
     let commits = port.log(repo, limit)?;
-    Ok(layout(&commits))
+    let graph = layout(&commits);
+    Ok(History { commits, graph })
 }
 
 pub fn file_diff(port: &dyn CommitPort, repo: &Path, path: &str, staged: bool) -> Result<String> {

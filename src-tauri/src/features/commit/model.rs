@@ -46,6 +46,16 @@ pub struct GraphRow {
     pub width: usize,
 }
 
+/// Resultado de una lectura de historial: los commits y el grafo derivado de
+/// ellos. Ambos salen de UNA sola pasada de `git log` (antes eran dos comandos
+/// `commit_log` + `commit_graph`, cada uno con su propio `git log --all`).
+#[derive(Serialize, Debug, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct History {
+    pub commits: Vec<Commit>,
+    pub graph: Vec<GraphRow>,
+}
+
 pub fn layout(commits: &[Commit]) -> Vec<GraphRow> {
     let mut lanes: Vec<Option<String>> = Vec::new();
     let mut rows = Vec::with_capacity(commits.len());

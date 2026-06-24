@@ -2,6 +2,7 @@ mod features;
 mod shared;
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use tauri::Manager;
 
@@ -21,36 +22,39 @@ use features::tag::{git_cli::TagGit, port::TagPort};
 use features::working_tree::{git_cli::WorkingTreeGit, port::WorkingTreePort};
 use features::worktree::{git_cli::WorktreeGit, port::WorktreePort};
 
+// Los puertos van en `Arc` (no `Box`) para poder clonar un handle propio y
+// `'static` de cada adaptador y moverlo a `spawn_blocking`: así el subproceso
+// git corre en el pool de blocking sin pedir prestado el `State`.
 pub struct Backend {
-    pub repo: Box<dyn RepoPort>,
-    pub recent_repos: Box<dyn RecentReposStore>,
-    pub worktree: Box<dyn WorktreePort>,
-    pub branch: Box<dyn BranchPort>,
-    pub commit: Box<dyn CommitPort>,
-    pub working_tree: Box<dyn WorkingTreePort>,
-    pub stash: Box<dyn StashPort>,
-    pub remote: Box<dyn RemotePort>,
-    pub tag: Box<dyn TagPort>,
-    pub integration: Box<dyn IntegrationPort>,
-    pub system: Box<dyn SystemPort>,
-    pub assistant: Box<dyn AssistantPort>,
+    pub repo: Arc<dyn RepoPort>,
+    pub recent_repos: Arc<dyn RecentReposStore>,
+    pub worktree: Arc<dyn WorktreePort>,
+    pub branch: Arc<dyn BranchPort>,
+    pub commit: Arc<dyn CommitPort>,
+    pub working_tree: Arc<dyn WorkingTreePort>,
+    pub stash: Arc<dyn StashPort>,
+    pub remote: Arc<dyn RemotePort>,
+    pub tag: Arc<dyn TagPort>,
+    pub integration: Arc<dyn IntegrationPort>,
+    pub system: Arc<dyn SystemPort>,
+    pub assistant: Arc<dyn AssistantPort>,
 }
 
 impl Backend {
     fn new(data_dir: PathBuf) -> Self {
         Self {
-            repo: Box::new(RepoGit),
-            recent_repos: Box::new(RecentReposJson::new(data_dir.join("recent-repos.json"))),
-            worktree: Box::new(WorktreeGit),
-            branch: Box::new(BranchGit),
-            commit: Box::new(CommitGit),
-            working_tree: Box::new(WorkingTreeGit),
-            stash: Box::new(StashGit),
-            remote: Box::new(RemoteGit),
-            tag: Box::new(TagGit),
-            integration: Box::new(IntegrationGit),
-            system: Box::new(SystemShell),
-            assistant: Box::new(AssistantClaude),
+            repo: Arc::new(RepoGit),
+            recent_repos: Arc::new(RecentReposJson::new(data_dir.join("recent-repos.json"))),
+            worktree: Arc::new(WorktreeGit),
+            branch: Arc::new(BranchGit),
+            commit: Arc::new(CommitGit),
+            working_tree: Arc::new(WorkingTreeGit),
+            stash: Arc::new(StashGit),
+            remote: Arc::new(RemoteGit),
+            tag: Arc::new(TagGit),
+            integration: Arc::new(IntegrationGit),
+            system: Arc::new(SystemShell),
+            assistant: Arc::new(AssistantClaude),
         }
     }
 }
@@ -69,7 +73,7 @@ pub fn run() {
             features::repo::ipc::open_repo,
             features::repo::ipc::recent_repos,
             features::repo::ipc::forget_recent_repo,
-            features::commit::ipc::commit_log,
+            features::commit::ipc::commit_history,
             features::branch::ipc::list_branches,
             features::working_tree::ipc::repo_status,
             features::worktree::ipc::list_worktrees,
@@ -98,7 +102,6 @@ pub fn run() {
             features::stash::ipc::drop_stash,
             features::worktree::ipc::prune_worktrees,
             features::system::ipc::open_path,
-            features::commit::ipc::commit_graph,
             features::tag::ipc::list_tags,
             features::tag::ipc::create_tag,
             features::tag::ipc::delete_tag,

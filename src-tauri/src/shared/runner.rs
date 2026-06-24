@@ -4,6 +4,20 @@ use std::process::Command;
 
 use crate::shared::error::{AppError, Result};
 
+/// Ejecuta trabajo bloqueante (subprocesos git) en el pool de blocking de
+/// Tauri/tokio, fuera de los workers del runtime async y del hilo de la UI.
+/// Aplana el `JoinError` (cancelación/panic de la tarea) a `AppError::Spawn`
+/// y deja pasar el `AppError` del propio comando git.
+pub async fn blocking<T, F>(f: F) -> Result<T>
+where
+    F: FnOnce() -> Result<T> + Send + 'static,
+    T: Send + 'static,
+{
+    tauri::async_runtime::spawn_blocking(f)
+        .await
+        .map_err(|e| AppError::Spawn(e.to_string()))?
+}
+
 pub fn git<I, S>(repo: &Path, args: I) -> Result<String>
 where
     I: IntoIterator<Item = S>,

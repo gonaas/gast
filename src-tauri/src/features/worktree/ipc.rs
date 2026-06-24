@@ -5,15 +5,17 @@ use tauri::State;
 use super::model::{NewWorktree, Worktree};
 use super::use_case;
 use crate::shared::error::Result;
+use crate::shared::runner::blocking;
 use crate::Backend;
 
 #[tauri::command]
-pub fn list_worktrees(backend: State<'_, Backend>, repo: String) -> Result<Vec<Worktree>> {
-    use_case::list(backend.worktree.as_ref(), &PathBuf::from(repo))
+pub async fn list_worktrees(backend: State<'_, Backend>, repo: String) -> Result<Vec<Worktree>> {
+    let worktree = backend.worktree.clone();
+    blocking(move || use_case::list(worktree.as_ref(), &PathBuf::from(repo))).await
 }
 
 #[tauri::command]
-pub fn add_worktree(
+pub async fn add_worktree(
     backend: State<'_, Backend>,
     repo: String,
     path: String,
@@ -21,31 +23,32 @@ pub fn add_worktree(
     new_branch: bool,
     start: String,
 ) -> Result<Vec<Worktree>> {
-    let spec = NewWorktree {
-        path,
-        branch,
-        new_branch,
-        start,
-    };
-    use_case::add(backend.worktree.as_ref(), &PathBuf::from(repo), spec)
+    let worktree = backend.worktree.clone();
+    blocking(move || {
+        let spec = NewWorktree {
+            path,
+            branch,
+            new_branch,
+            start,
+        };
+        use_case::add(worktree.as_ref(), &PathBuf::from(repo), spec)
+    })
+    .await
 }
 
 #[tauri::command]
-pub fn remove_worktree(
+pub async fn remove_worktree(
     backend: State<'_, Backend>,
     repo: String,
     path: String,
     force: bool,
 ) -> Result<Vec<Worktree>> {
-    use_case::remove(
-        backend.worktree.as_ref(),
-        &PathBuf::from(repo),
-        &path,
-        force,
-    )
+    let worktree = backend.worktree.clone();
+    blocking(move || use_case::remove(worktree.as_ref(), &PathBuf::from(repo), &path, force)).await
 }
 
 #[tauri::command]
-pub fn prune_worktrees(backend: State<'_, Backend>, repo: String) -> Result<Vec<Worktree>> {
-    use_case::prune(backend.worktree.as_ref(), &PathBuf::from(repo))
+pub async fn prune_worktrees(backend: State<'_, Backend>, repo: String) -> Result<Vec<Worktree>> {
+    let worktree = backend.worktree.clone();
+    blocking(move || use_case::prune(worktree.as_ref(), &PathBuf::from(repo))).await
 }
