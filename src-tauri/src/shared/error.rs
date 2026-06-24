@@ -10,6 +10,8 @@ pub enum AppError {
     InvalidPath(String),
     #[error("IA: {0}")]
     Ai(String),
+    #[error("watcher: {0}")]
+    Watch(String),
 }
 
 impl Serialize for AppError {

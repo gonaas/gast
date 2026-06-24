@@ -19,6 +19,102 @@ html,
   height: 100vh;
 }
 
+/* --- Barra de pestañas de repos abiertos (titlebar estilo Fork) --- */
+.tab-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  flex: none;
+  height: 40px;
+  /* 80px a la izquierda para despejar los semáforos de macOS (titleBarStyle Overlay) */
+  padding: 6px 8px 0 80px;
+  background: var(--color-tabbar);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+.tab-bar::-webkit-scrollbar {
+  height: 0;
+}
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 1 auto;
+  min-width: 120px;
+  max-width: 240px;
+  height: 30px;
+  padding: 0 10px;
+  /* las inactivas se separan con un divisor sutil */
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+  border-top: 1px solid transparent;
+  border-top-left-radius: 7px;
+  border-top-right-radius: 7px;
+  color: var(--fg-dim);
+  cursor: default;
+  white-space: nowrap;
+  /* -webkit-app-region permite que las pestañas no arrastren la ventana */
+  -webkit-app-region: no-drag;
+}
+/* divisor sutil entre pestañas inactivas contiguas */
+.tab:not(.active) + .tab:not(.active) {
+  box-shadow: inset 1px 0 0 var(--color-border-strong);
+}
+.tab:not(.active):hover {
+  background: var(--color-tabbar-hover);
+}
+.tab.active {
+  /* blanca y "conectada" con el contenido de abajo */
+  background: var(--color-surface);
+  border-color: var(--border);
+  color: var(--fg);
+  margin-bottom: -1px;
+  height: 31px;
+}
+.tab-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+.tab-close,
+.tab-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  background: none;
+  border: none;
+  color: var(--fg-dim);
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px;
+  font-size: 13px;
+  line-height: 1;
+  -webkit-app-region: no-drag;
+}
+.tab-close {
+  opacity: 0;
+}
+.tab:hover .tab-close,
+.tab.active .tab-close {
+  opacity: 1;
+}
+.tab-close:hover {
+  background: var(--color-surface-muted);
+  color: var(--red);
+}
+.tab-add {
+  align-self: center;
+  margin: 0 0 4px 4px;
+  width: 28px;
+  height: 28px;
+}
+.tab-add:hover {
+  background: var(--color-tabbar-hover);
+  color: var(--fg);
+}
+
 .toolbar-repo {
   font-weight: 600;
   white-space: nowrap;
@@ -183,6 +279,7 @@ ul {
   align-items: center;
   justify-content: center;
   width: 16px;
+  flex: none;
   font-size: 15px;
   color: var(--fg-dim);
 }
@@ -191,6 +288,10 @@ ul {
 }
 .view-label {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .sidebar-filter {
   padding: 8px 10px;
@@ -274,8 +375,14 @@ ul {
 .branch:hover {
   background: var(--bg-soft2);
 }
+/* Rama actual (head): fondo sutil + barra de acento para que resalte. */
+.branch.head,
+.branch.head:hover {
+  background: var(--sel);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
 .branch.head .branch-name {
-  color: var(--fg);
+  color: var(--accent);
   font-weight: 600;
 }
 .folder-icon,
@@ -286,7 +393,7 @@ ul {
   color: var(--fg-dim);
 }
 .branch.head .branch-icon {
-  color: var(--fg);
+  color: var(--accent);
 }
 
 /* Selección: pill con el color primario, texto e iconos en blanco. */
@@ -547,24 +654,88 @@ ul {
   color: var(--color-warn);
 }
 
-/* --- Vista de cambios (working tree) --- */
-.changes-view .status-group h4 {
-  font-size: 11px;
-  color: var(--fg-dim);
-  margin: 6px 12px 2px;
-}
-.status-group li {
+/* --- Vista de cambios (working tree): split lista | diff estilo Fork --- */
+.changes-workspace {
+  flex: 1;
   display: flex;
-  gap: 8px;
-  padding: 2px 12px;
+  flex-direction: row;
+  overflow: hidden;
+}
+.changes-list-pane {
+  width: var(--changes-list-w);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+}
+.changes-diff-pane {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.changes-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 .clean {
   color: var(--green);
   padding: 6px 12px;
 }
 
-.file-row {
+/* Cada cuadrícula (Unstaged / Staged): cabecera + columnas + lista propia. */
+.file-grid {
+  flex: 1 1 0;
+  min-height: 0;
   display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.file-grid + .file-grid {
+  border-top: 1px solid var(--border);
+}
+.file-grid-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg-soft);
+}
+.file-grid-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--fg-dim);
+}
+.file-grid-cols {
+  display: grid;
+  grid-template-columns: 20px 1fr 1fr;
+  gap: 8px;
+  padding: 2px 12px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-dim);
+  border-bottom: 1px solid var(--border);
+}
+.file-grid-cols span:first-child {
+  grid-column: 2;
+}
+.file-grid-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.file-row {
+  display: grid;
+  grid-template-columns: 20px 1fr 1fr auto;
   align-items: center;
   gap: 8px;
   padding: 2px 12px;
@@ -572,18 +743,29 @@ ul {
 .file-row:hover {
   background: var(--bg-soft2);
 }
-.file-row.selected {
-  background: var(--sel);
-  box-shadow: inset 2px 0 0 var(--accent);
+/* Selección: azul sólido con texto en blanco, igual que .branch.selected. */
+.file-row.selected,
+.file-row.selected:hover {
+  background: var(--accent);
+}
+.file-row.selected .file-name,
+.file-row.selected .file-location,
+.file-row.selected .xy {
+  color: var(--color-on-primary);
 }
 .xy {
   color: var(--yellow);
-  width: 20px;
   flex: none;
 }
-.file-path {
-  flex: 1;
+.file-name {
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.file-location {
+  cursor: pointer;
+  color: var(--fg-dim);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -635,7 +817,10 @@ ul {
   border-right: 1px solid var(--border);
 }
 .detail-diff {
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
 }
 
 .commit-box {
@@ -643,6 +828,9 @@ ul {
   flex-direction: column;
   gap: 6px;
   padding: 10px 12px;
+  flex: none;
+  border-top: 1px solid var(--border);
+  background: var(--bg-soft);
 }
 .commit-actions {
   display: flex;
@@ -651,46 +839,129 @@ ul {
   gap: 8px;
 }
 
-/* --- Diff --- */
+/* --- Diff (react-diff-view, tema oscuro) --- */
 .diff {
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  /* Overrides de las variables de react-diff-view para encajar con el tema. */
+  --diff-background-color: var(--bg);
+  --diff-text-color: var(--fg);
+  --diff-font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  --diff-selection-background-color: var(--sel);
+  --diff-gutter-insert-background-color: rgba(26, 127, 55, 0.18);
+  --diff-gutter-delete-background-color: rgba(207, 34, 46, 0.18);
+  --diff-gutter-insert-text-color: var(--fg-dim);
+  --diff-gutter-delete-text-color: var(--fg-dim);
+  --diff-code-insert-background-color: rgba(26, 127, 55, 0.12);
+  --diff-code-delete-background-color: rgba(207, 34, 46, 0.12);
+  --diff-code-insert-edit-background-color: rgba(26, 127, 55, 0.32);
+  --diff-code-delete-edit-background-color: rgba(207, 34, 46, 0.32);
+  --diff-omit-gutter-line-color: var(--border);
 }
 .diff-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 8px 12px;
   color: var(--fg-dim);
   border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
   background: var(--bg);
+  flex: none;
 }
-.diff pre {
-  margin: 0;
+.diff-path {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.dl {
-  padding: 0 12px;
-  white-space: pre-wrap;
-  word-break: break-all;
+.diff-view-toggle {
+  display: inline-flex;
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
 }
-.dl.add {
-  background: rgba(26, 127, 55, 0.1);
-  color: var(--green);
+.diff-view-toggle button {
+  background: none;
+  border: none;
+  color: var(--fg-dim);
+  padding: 2px 10px;
+  font-size: 11px;
+  cursor: pointer;
 }
-.dl.del {
-  background: rgba(207, 34, 46, 0.1);
-  color: var(--red);
+.diff-view-toggle button + button {
+  border-left: 1px solid var(--border);
 }
-.dl.hunk {
+.diff-view-toggle button:hover {
+  background: var(--bg-soft2);
+}
+.diff-view-toggle button.active {
+  background: var(--sel);
   color: var(--accent);
-  background: var(--bg-soft);
+  font-weight: 600;
 }
-.dl.meta {
+.diff-table {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+/* La línea de cabecera del hunk (@@ … @@) */
+.diff-table .diff-hunk-header {
+  background: var(--bg-soft);
+  color: var(--accent);
+}
+
+/* Colores de sintaxis (refractor/Prism) para tema oscuro */
+.diff-table .token.comment,
+.diff-table .token.prolog,
+.diff-table .token.doctype,
+.diff-table .token.cdata {
+  color: var(--fg-dim);
+  font-style: italic;
+}
+.diff-table .token.punctuation {
   color: var(--fg-dim);
 }
-.dl.conflict {
-  background: rgba(154, 103, 0, 0.18);
+.diff-table .token.keyword,
+.diff-table .token.boolean,
+.diff-table .token.atrule,
+.diff-table .token.important {
+  color: #c678dd;
+}
+.diff-table .token.string,
+.diff-table .token.char,
+.diff-table .token.attr-value,
+.diff-table .token.regex {
+  color: var(--green);
+}
+.diff-table .token.number,
+.diff-table .token.constant,
+.diff-table .token.symbol {
+  color: #d19a66;
+}
+.diff-table .token.function,
+.diff-table .token.class-name {
+  color: #61afef;
+}
+.diff-table .token.tag,
+.diff-table .token.selector,
+.diff-table .token.deleted {
+  color: #e06c75;
+}
+.diff-table .token.attr-name,
+.diff-table .token.property,
+.diff-table .token.builtin {
   color: var(--yellow);
-  font-weight: 600;
+}
+.diff-table .token.operator,
+.diff-table .token.entity,
+.diff-table .token.url {
+  color: var(--accent);
 }
 
 /* --- Conflictos --- */

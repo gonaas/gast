@@ -42,6 +42,10 @@ where
         .env("GIT_EDITOR", "true")
         .env("GIT_SEQUENCE_EDITOR", "true")
         .env("GIT_TERMINAL_PROMPT", "0")
+        // Evita que comandos de lectura (status/diff/log) reescriban `.git/index`
+        // para refrescar el stat-cache: ese write disparaba el file watcher, que
+        // recargaba el estado, que volvía a correr status… un bucle infinito.
+        .env("GIT_OPTIONAL_LOCKS", "0")
         .output()
         .map_err(|e| AppError::Spawn(e.to_string()))
 }

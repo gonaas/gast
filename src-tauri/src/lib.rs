@@ -62,6 +62,7 @@ pub fn run() {
         .setup(|app| {
             let data_dir = app.path().app_config_dir()?;
             app.manage(Backend::new(data_dir));
+            app.manage(features::watcher::WatcherState::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -115,6 +116,8 @@ pub fn run() {
             features::remote::ipc::remove_remote,
             features::remote::ipc::rename_remote,
             features::assistant::ipc::generate_commit_message,
+            features::watcher::ipc::watch_repo,
+            features::watcher::ipc::unwatch_repo,
         ])
         .run(tauri::generate_context!())
         .expect("error al arrancar la aplicación Tauri");

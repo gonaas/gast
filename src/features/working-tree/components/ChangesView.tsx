@@ -1,12 +1,20 @@
-import { Fragment } from "react";
-import type { ReactNode } from "react";
 import { useStore } from "@/shared/store";
 import type { FileStatus } from "@/shared/types";
 import { IconAdd, IconRemove, IconDiscard, IconCheck } from "@/shared/ui";
 import { FileRow } from "@/shared/components/FileRow";
+import { FileGrid } from "./FileGrid";
 
 export function ChangesView() {
-  const { status, selectedPath, selectFile, stageFile, unstageFile, discardFile } = useStore();
+  const {
+    status,
+    selectedPath,
+    selectFile,
+    stageFile,
+    unstageFile,
+    discardFile,
+    stageAll,
+    unstageAll,
+  } = useStore();
 
   if (!status) return null;
 
@@ -14,79 +22,68 @@ export function ChangesView() {
   const untracked = status.files.filter((f) => f.indexStatus === "?");
   const unstaged = status.files.filter((f) => f.indexStatus !== "?" && f.worktreeStatus !== " ");
 
-  return (
-    <div className="changes-view">
-      <div className="commits-head">Local Changes · {status.branch}</div>
+  // La caja "Unstaged" agrupa modificados sin stage + untracked (como Fork).
+  const unstagedAll: { file: FileStatus; untracked: boolean }[] = [
+    ...unstaged.map((file) => ({ file, untracked: false })),
+    ...untracked.map((file) => ({ file, untracked: true })),
+  ];
 
-      <Group title="Staged" files={staged}>
-        {(f) => (
-          <FileRow
-            file={f}
-            selected={selectedPath === f.path}
-            onSelect={() => selectFile(f.path, true, false)}
-            actions={[
-              { key: "unstage", icon: <IconRemove />, title: "Quitar del stage", onClick: () => unstageFile(f.path) },
-            ]}
-          />
-        )}
-      </Group>
-
-      <Group title="Sin stage" files={unstaged}>
-        {(f) => (
-          <FileRow
-            file={f}
-            selected={selectedPath === f.path}
-            onSelect={() => selectFile(f.path, false, false)}
-            actions={[
-              { key: "stage", icon: <IconAdd />, title: "Añadir al stage", onClick: () => stageFile(f.path) },
-              { key: "discard", icon: <IconDiscard />, title: "Descartar cambios", onClick: () => discardFile(f.path) },
-            ]}
-          />
-        )}
-      </Group>
-
-      <Group title="Sin seguimiento" files={untracked}>
-        {(f) => (
-          <FileRow
-            file={f}
-            selected={selectedPath === f.path}
-            onSelect={() => selectFile(f.path, false, true)}
-            actions={[
-              { key: "stage", icon: <IconAdd />, title: "Añadir al stage", onClick: () => stageFile(f.path) },
-            ]}
-          />
-        )}
-      </Group>
-
-      {status.files.length === 0 && (
+  if (status.files.length === 0) {
+    return (
+      <div className="changes-view">
         <p className="clean">
           <IconCheck /> Árbol limpio
         </p>
-      )}
-    </div>
-  );
-}
+      </div>
+    );
+  }
 
-function Group({
-  title,
-  files,
-  children,
-}: {
-  title: string;
-  files: FileStatus[];
-  children: (f: FileStatus) => ReactNode;
-}) {
-  if (files.length === 0) return null;
   return (
-    <div className="status-group">
-      <h4>
-        {title} ({files.length})
-      </h4>
-      <ul>
-        {files.map((f) => (
-          <Fragment key={f.path}>{children(f)}</Fragment>
+    <div className="changes-view">
+      <FileGrid
+        title="Unstaged"
+        count={unstagedAll.length}
+        bulkLabel="Stage"
+        bulkIcon={<IconAdd />}
+        onBulk={stageAll}
+      >
+        {unstagedAll.map(({ file, untracked }) => (
+          <FileRow
+            key={file.path}
+            file={file}
+            selected={selectedPath === file.path}
+            onSelect={() => selectFile(file.path, false, untracked)}
+            actions={
+              untracked
+                ? [{ key: "stage", icon: <IconAdd />, title: "Añadir al stage", onClick: () => stageFile(file.path) }]
+                : [
+                    { key: "stage", icon: <IconAdd />, title: "Añadir al stage", onClick: () => stageFile(file.path) },
+                    { key: "discard", icon: <IconDiscard />, title: "Descartar cambios", onClick: () => discardFile(file.path) },
+                  ]
+            }
+          />
         ))}
-      </ul>
+      </FileGrid>
+
+      <FileGrid
+        title="Staged"
+        count={staged.length}
+        bulkLabel="Unstage"
+        bulkIcon={<IconRemove />}
+        onBulk={unstageAll}
+      >
+        {staged.map((file) => (
+          <FileRow
+            key={file.path}
+            file={file}
+            selected={selectedPath === file.path}
+            onSelect={() => selectFile(file.path, true, false)}
+            actions={[
+              { key: "unstage", icon: <IconRemove />, title: "Quitar del stage", onClick: () => unstageFile(file.path) },
+            ]}
+          />
+        ))}
+      </FileGrid>
     </div>
   );
 }

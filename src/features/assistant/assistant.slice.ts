@@ -2,9 +2,6 @@ import type { StateCreator } from "zustand";
 import type { Store } from "@/shared/store";
 import * as api from "./assistant.api";
 
-// Asistencia con IA (espeja el slice `assistant` del backend). Genera un mensaje
-// de commit a partir del diff staged; devuelve el texto para que el componente
-// lo coloque en el textarea.
 export interface AssistantSlice {
   generateCommitMessage: () => Promise<string>;
 }

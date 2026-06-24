@@ -7,5 +7,6 @@ pub mod repo;
 pub mod stash;
 pub mod system;
 pub mod tag;
+pub mod watcher;
 pub mod working_tree;
 pub mod worktree;

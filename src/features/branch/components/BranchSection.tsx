@@ -15,8 +15,9 @@ export function BranchSection({ query }: { query: string }) {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
 
+  // La rama actual (head) siempre se muestra, aunque no coincida con el filtro.
   const locals = branches.filter(
-    (b) => !b.isRemote && (!query || b.name.toLowerCase().includes(query)),
+    (b) => !b.isRemote && (!query || b.isHead || b.name.toLowerCase().includes(query)),
   );
   const localTree = buildBranchTree(locals);
 
