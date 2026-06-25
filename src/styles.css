@@ -71,11 +71,27 @@ html,
   margin-bottom: -1px;
   height: 31px;
 }
-.tab-name {
+/* columna nombre + sufijo distintivo (solo aparece al colisionar nombres) */
+.tab-label {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   flex: 1;
+  min-width: 0;
+  line-height: 1.15;
+}
+.tab-name {
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-align: center;
+}
+.tab-suffix {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 10px;
+  opacity: 0.65;
 }
 .tab-close,
 .tab-add {
