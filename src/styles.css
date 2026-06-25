@@ -576,7 +576,9 @@ ul {
 .commit {
   padding: 0 14px;
   display: grid;
-  grid-template-columns: 1fr 180px 72px 150px;
+  /* minmax(0, …) permite que la 1ª columna encoja por debajo de su contenido;
+     sin el 0, los refs anchos ensanchan la pista y se desbordan sobre autor/hash. */
+  grid-template-columns: minmax(0, 1fr) 180px 72px 150px;
   align-items: center;
   gap: 12px;
   overflow: hidden;
@@ -593,6 +595,9 @@ ul {
   align-items: center;
   gap: 6px;
   min-width: 0;
+  /* recorta los ref-pills que no quepan en vez de pintarlos sobre la columna
+     de autor/hash (el overflow del .commit solo recorta en el borde de la fila) */
+  overflow: hidden;
 }
 .subject {
   white-space: nowrap;
