@@ -3,15 +3,18 @@ use std::sync::Mutex;
 use std::time::Duration;
 
 use notify::{RecommendedWatcher, RecursiveMode};
-use notify_debouncer_full::{
-    new_debouncer, DebounceEventResult, DebouncedEvent, Debouncer, RecommendedCache,
-};
+use notify_debouncer_mini::{new_debouncer, DebounceEventResult, DebouncedEvent, Debouncer};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 use crate::shared::error::{AppError, Result};
 
-type RepoDebouncer = Debouncer<RecommendedWatcher, RecommendedCache>;
+// Usamos el debouncer "mini" (no el "full") a propósito: `notify-debouncer-full`
+// mantiene un cache de file-ids y al registrar un watch recursivo recorre TODO
+// el árbol con `WalkDir` para sembrarlo. En un monorepo eso significa caminar
+// `node_modules/`, `target/`, etc. de entrada → cuelga la app al abrir el repo.
+// `mini` no tiene ese cache: solo coalesce eventos por ruta, sin escaneo previo.
+type RepoDebouncer = Debouncer<RecommendedWatcher>;
 
 /// Estado gestionado por Tauri: el debouncer del repo vigilado actualmente.
 /// Solo se vigila un repo a la vez (el de la pestaña activa); al cambiar de
@@ -44,7 +47,6 @@ pub fn start(app: AppHandle, state: &WatcherState, repo: PathBuf) -> Result<()> 
     let repo_for_handler = repo.clone();
     let mut debouncer = new_debouncer(
         Duration::from_millis(400),
-        None,
         move |result: DebounceEventResult| {
             if let Ok(events) = result {
                 handle_events(&app_handle, &repo_for_handler, &events);
@@ -54,6 +56,7 @@ pub fn start(app: AppHandle, state: &WatcherState, repo: PathBuf) -> Result<()> 
     .map_err(|e| AppError::Watch(e.to_string()))?;
 
     debouncer
+        .watcher()
         .watch(&repo, RecursiveMode::Recursive)
         .map_err(|e| AppError::Watch(e.to_string()))?;
 
@@ -73,12 +76,10 @@ fn handle_events(app: &AppHandle, repo: &Path, events: &[DebouncedEvent]) {
     let mut touched_worktree = false;
 
     for event in events {
-        for path in &event.paths {
-            match classify(repo, path) {
-                Class::Git => touched_git = true,
-                Class::Worktree => touched_worktree = true,
-                Class::Ignore => {}
-            }
+        match classify(repo, &event.path) {
+            Class::Git => touched_git = true,
+            Class::Worktree => touched_worktree = true,
+            Class::Ignore => {}
         }
     }
 
