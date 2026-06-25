@@ -27,3 +27,22 @@ pub fn commit_files(port: &dyn CommitPort, repo: &Path, hash: &str) -> Result<Ve
 pub fn commit_diff(port: &dyn CommitPort, repo: &Path, hash: &str, path: &str) -> Result<String> {
     port.commit_diff(repo, hash, path)
 }
+
+pub fn range_files(
+    port: &dyn CommitPort,
+    repo: &Path,
+    base: &str,
+    target: &str,
+) -> Result<Vec<FileStatus>> {
+    port.range_files(repo, base, target)
+}
+
+pub fn range_diff(
+    port: &dyn CommitPort,
+    repo: &Path,
+    base: &str,
+    target: &str,
+    path: &str,
+) -> Result<String> {
+    port.range_diff(repo, base, target, path)
+}

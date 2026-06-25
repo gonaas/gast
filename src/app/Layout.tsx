@@ -6,6 +6,7 @@ import { Sidebar } from "./Sidebar";
 import { DetailPanel } from "./DetailPanel";
 import { CommitList } from "@/features/commit/components/CommitList";
 import { ChangesWorkspace } from "@/features/working-tree/components/ChangesWorkspace";
+import { CompareWorkspace } from "@/features/compare/components/CompareWorkspace";
 
 export function Layout() {
   const view = useStore((s) => s.view);
@@ -25,6 +26,8 @@ export function Layout() {
               <DetailPanel />
             </div>
           </>
+        ) : view === "compare" ? (
+          <CompareWorkspace />
         ) : (
           <ChangesWorkspace />
         )}

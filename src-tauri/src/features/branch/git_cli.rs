@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::path::Path;
 
 use super::model::Branch;
@@ -43,6 +44,40 @@ impl BranchPort for BranchGit {
 
     fn rename(&self, repo: &Path, old: &str, new: &str) -> Result<()> {
         git(repo, ["branch", "-m", old, new])?;
+        Ok(())
+    }
+
+    fn track_all_remote(&self, repo: &Path, remote: &str) -> Result<()> {
+        let locals: HashSet<String> = git(
+            repo,
+            ["for-each-ref", "--format=%(refname:short)", "refs/heads/"],
+        )?
+        .lines()
+        .map(|l| l.trim().to_string())
+        .filter(|l| !l.is_empty())
+        .collect();
+
+        // Usamos el refname COMPLETO (no `:short`) porque el short de
+        // `refs/remotes/origin/HEAD` es ambiguo ("origin"); el full es inequívoco
+        // y deja saltar el puntero simbólico con una comparación exacta.
+        let prefix = format!("refs/remotes/{remote}/");
+        let head_ref = format!("refs/remotes/{remote}/HEAD");
+        let remotes = git(repo, ["for-each-ref", "--format=%(refname)", &prefix])?;
+        for full in remotes.lines() {
+            let full = full.trim();
+            if full.is_empty() || full == head_ref {
+                continue;
+            }
+            // "refs/remotes/origin/feature/x" → local "feature/x", origen "origin/feature/x"
+            let Some(local) = full.strip_prefix(&prefix) else {
+                continue;
+            };
+            if local.is_empty() || locals.contains(local) {
+                continue;
+            }
+            let source = format!("{remote}/{local}");
+            git(repo, ["branch", "--track", local, &source])?;
+        }
         Ok(())
     }
 }

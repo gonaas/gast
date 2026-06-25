@@ -11,6 +11,9 @@ export interface BranchSlice {
   selectBranch: (name: string) => void;
   loadBranches: (repoPath: string) => Promise<void>;
   checkoutBranch: (name: string) => Promise<void>;
+  // Checkout de una rama remota (p. ej. "origin/feature"): git crea la rama
+  // local que la trackea y conmuta a ella (estilo Fork).
+  checkoutRemote: (remoteBranch: string) => Promise<void>;
   createBranch: (name: string, start: string) => Promise<void>;
   deleteBranch: (name: string, force: boolean) => Promise<void>;
   renameBranch: (oldName: string, newName: string) => Promise<void>;
@@ -21,6 +24,14 @@ export const createBranchSlice: StateCreator<Store, [], [], BranchSlice> = (set,
   selectedBranch: null,
 
   selectBranch: (name) => set({ selectedBranch: name }),
+
+  checkoutRemote: (remoteBranch) => {
+    // "origin/feature/x" → "feature/x". El nombre del remoto nunca lleva '/',
+    // así que basta quitar el primer segmento. `git switch <local>` (DWIM) crea
+    // la rama local que trackea la remota cuando aún no existe.
+    const local = remoteBranch.split("/").slice(1).join("/");
+    return get().checkoutBranch(local);
+  },
 
   loadBranches: async (repoPath) => {
     set({ branches: await api.listBranches(repoPath) });

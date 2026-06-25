@@ -37,6 +37,7 @@ export {
   FolderGit2 as IconWorktree,
   GitCommitHorizontal as IconHistory,
   FileDiff as IconChanges,
+  GitCompare as IconCompare,
   // -- Worktree: destinos de apertura --
   Code2 as IconEditor,
   Terminal as IconTerminal,

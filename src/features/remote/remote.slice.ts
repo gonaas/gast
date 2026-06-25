@@ -3,6 +3,7 @@ import type { Store } from "@/shared/store";
 import type { Remote } from "@/shared/types";
 import * as api from "./remote.api";
 import type { PullStrategy } from "./remote.api";
+import * as branchApi from "@/features/branch/branch.api";
 
 export interface RemoteSlice {
   remotes: Remote[];
@@ -10,6 +11,9 @@ export interface RemoteSlice {
   remoteOp: (op: "fetch" | "pull" | "push", strategy?: PullStrategy) => Promise<void>;
   addRemote: (name: string, url: string) => Promise<void>;
   removeRemote: (name: string) => Promise<void>;
+  // Fetch + crea una rama local que trackea cada rama del remoto que aún no
+  // tengas en local (el "traer todas a local" de Fork).
+  pullRemoteToLocal: (remote: string) => Promise<void>;
 }
 
 export const createRemoteSlice: StateCreator<Store, [], [], RemoteSlice> = (set, get) => ({
@@ -27,6 +31,21 @@ export const createRemoteSlice: StateCreator<Store, [], [], RemoteSlice> = (set,
       if (op === "fetch") await api.fetch(repo.path);
       else if (op === "pull") await api.pull(repo.path, strategy ?? "ffOnly");
       else await api.push(repo.path);
+      await get().refresh();
+    } catch (e) {
+      set({ error: String(e) });
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  pullRemoteToLocal: async (remote) => {
+    const repo = get().repo;
+    if (!repo) return;
+    set({ loading: true, error: null });
+    try {
+      await api.fetch(repo.path);
+      await branchApi.trackRemoteBranches(repo.path, remote);
       await get().refresh();
     } catch (e) {
       set({ error: String(e) });

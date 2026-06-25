@@ -14,6 +14,7 @@ import {
   IconOpenIn,
   IconRefresh,
   IconChevronDown,
+  IconCompare,
 } from "@/shared/ui";
 
 export function Toolbar({ onOpen }: { onOpen: () => void }) {
@@ -24,7 +25,13 @@ export function Toolbar({ onOpen }: { onOpen: () => void }) {
   const remoteOp = useStore((s) => s.remoteOp);
   const checkoutBranch = useStore((s) => s.checkoutBranch);
   const openWorktree = useStore((s) => s.openWorktree);
+  const selectedBranch = useStore((s) => s.selectedBranch);
+  const openCompare = useStore((s) => s.openCompare);
   const [showStash, setShowStash] = useState(false);
+
+  // "Ver cambios" compara la rama seleccionada en el sidebar contra la actual.
+  // Solo tiene sentido si hay una seleccionada distinta de HEAD.
+  const canCompare = !!selectedBranch && selectedBranch !== repo?.head;
 
   const locals = branches.filter((b) => !b.isRemote);
 
@@ -79,6 +86,20 @@ export function Toolbar({ onOpen }: { onOpen: () => void }) {
                   <IconPush />
                 </Button.Icon>
                 <Button.Label>Push</Button.Label>
+              </Button>
+              <Button
+                onClick={() => selectedBranch && openCompare(selectedBranch)}
+                disabled={loading || !canCompare}
+                title={
+                  canCompare
+                    ? `Ver cambios de ${selectedBranch} respecto a la rama actual`
+                    : "Selecciona en el sidebar una rama distinta a la actual"
+                }
+              >
+                <Button.Icon>
+                  <IconCompare />
+                </Button.Icon>
+                <Button.Label>Ver cambios</Button.Label>
               </Button>
               <Button onClick={() => setShowStash((v) => !v)}>
                 <Button.Icon>
