@@ -1,5 +1,7 @@
+import { useMemo } from "react";
 import { useStore } from "@/shared/store";
 import { IconClose, IconAdd } from "@/shared/ui";
+import { disambiguateTabs } from "./tabLabels";
 
 // Barra de pestañas de repositorios abiertos (estilo Fork): cada pestaña es un
 // repo; click cambia de repo, "×" cierra, "+" abre otro.
@@ -9,11 +11,16 @@ export function TabBar({ onOpen }: { onOpen: () => void }) {
   const openRepo = useStore((s) => s.openRepo);
   const closeTab = useStore((s) => s.closeTab);
 
+  // Sufijo distintivo (segmento del padre) solo cuando colisionan nombres.
+  const suffixes = useMemo(() => disambiguateTabs(tabs), [tabs]);
+
   if (tabs.length === 0) return null;
 
   return (
     <div className="tab-bar" data-tauri-drag-region>
-      {tabs.map((t) => (
+      {tabs.map((t) => {
+        const suffix = suffixes.get(t.path);
+        return (
         <div
           key={t.path}
           className={t.path === activeTab ? "tab active" : "tab"}
@@ -22,7 +29,10 @@ export function TabBar({ onOpen }: { onOpen: () => void }) {
             if (t.path !== activeTab) openRepo(t.path);
           }}
         >
-          <span className="tab-name">{t.name}</span>
+          <span className="tab-label">
+            <span className="tab-name">{t.name}</span>
+            {suffix && <span className="tab-suffix">{suffix}</span>}
+          </span>
           <button
             className="tab-close"
             title="Cerrar pestaña"
@@ -34,7 +44,8 @@ export function TabBar({ onOpen }: { onOpen: () => void }) {
             <IconClose />
           </button>
         </div>
-      ))}
+        );
+      })}
       <button className="tab-add" title="Abrir repositorio" onClick={onOpen}>
         <IconAdd />
       </button>
