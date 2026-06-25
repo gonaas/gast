@@ -62,3 +62,30 @@ pub async fn commit_diff(
     blocking(move || use_case::commit_diff(commit.as_ref(), &PathBuf::from(repo), &hash, &path))
         .await
 }
+
+#[tauri::command]
+pub async fn compare_files(
+    backend: State<'_, Backend>,
+    repo: String,
+    base: String,
+    target: String,
+) -> Result<Vec<FileStatus>> {
+    let commit = backend.commit.clone();
+    blocking(move || use_case::range_files(commit.as_ref(), &PathBuf::from(repo), &base, &target))
+        .await
+}
+
+#[tauri::command]
+pub async fn compare_diff(
+    backend: State<'_, Backend>,
+    repo: String,
+    base: String,
+    target: String,
+    path: String,
+) -> Result<String> {
+    let commit = backend.commit.clone();
+    blocking(move || {
+        use_case::range_diff(commit.as_ref(), &PathBuf::from(repo), &base, &target, &path)
+    })
+    .await
+}

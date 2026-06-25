@@ -20,3 +20,7 @@ export function deleteBranch(repo: string, name: string, force: boolean): Promis
 export function renameBranch(repo: string, oldName: string, newName: string): Promise<Branch[]> {
   return call("rename_branch", { repo, old: oldName, new: newName });
 }
+
+export function trackRemoteBranches(repo: string, remote: string): Promise<Branch[]> {
+  return call("track_remote_branches", { repo, remote });
+}

@@ -21,7 +21,11 @@ import {
 interface BranchTreeProps {
   node: BranchNode;
   depth: number;
+  // Solo lectura total (sin interacción). Distinto de `remote`.
   readOnly?: boolean;
+  // Ramas de un remoto: doble-clic crea la rama local que las trackea y hace
+  // checkout; menú contextual reducido a esa acción.
+  remote?: boolean;
   onCheckout?: (b: Branch) => void;
   onDelete?: (b: Branch) => void;
   onMerge?: (b: Branch) => void;
@@ -32,6 +36,7 @@ export function BranchTree({
   node,
   depth,
   readOnly = false,
+  remote = false,
   onCheckout,
   onDelete,
   onMerge,
@@ -45,6 +50,7 @@ export function BranchTree({
           node={folder}
           depth={depth}
           readOnly={readOnly}
+          remote={remote}
           onCheckout={onCheckout}
           onDelete={onDelete}
           onMerge={onMerge}
@@ -57,6 +63,7 @@ export function BranchTree({
           branch={b}
           depth={depth}
           readOnly={readOnly}
+          remote={remote}
           leafName={leafName(b.name)}
           onCheckout={() => onCheckout?.(b)}
           onDelete={() => onDelete?.(b)}
@@ -72,6 +79,7 @@ function FolderNode({
   node,
   depth,
   readOnly,
+  remote,
   onCheckout,
   onDelete,
   onMerge,
@@ -80,6 +88,7 @@ function FolderNode({
   node: BranchNode;
   depth: number;
   readOnly?: boolean;
+  remote?: boolean;
   onCheckout?: (b: Branch) => void;
   onDelete?: (b: Branch) => void;
   onMerge?: (b: Branch) => void;
@@ -106,6 +115,7 @@ function FolderNode({
           node={node}
           depth={depth + 1}
           readOnly={readOnly}
+          remote={remote}
           onCheckout={onCheckout}
           onDelete={onDelete}
           onMerge={onMerge}
@@ -121,6 +131,7 @@ function BranchRow({
   depth,
   leafName,
   readOnly,
+  remote,
   onCheckout,
   onDelete,
   onMerge,
@@ -130,6 +141,7 @@ function BranchRow({
   depth: number;
   leafName: string;
   readOnly?: boolean;
+  remote?: boolean;
   onCheckout: () => void;
   onDelete: () => void;
   onMerge: () => void;
@@ -139,13 +151,15 @@ function BranchRow({
   const selectedBranch = useStore((s) => s.selectedBranch);
   const selectBranch = useStore((s) => s.selectBranch);
   const inWorktree = !branch.isHead && worktrees.some((w) => w.branch === branch.name);
-  const selected = !readOnly && selectedBranch === branch.name;
+  const selected = !readOnly && !remote && selectedBranch === branch.name;
 
   const title = readOnly
     ? branch.name
-    : inWorktree
-      ? "Doble clic para abrir su worktree · clic derecho para opciones"
-      : "Doble clic para checkout · clic derecho para opciones";
+    : remote
+      ? "Doble clic para crear una rama local y hacer checkout · clic derecho para opciones"
+      : inWorktree
+        ? "Doble clic para abrir su worktree · clic derecho para opciones"
+        : "Doble clic para checkout · clic derecho para opciones";
 
   const className = ["branch", branch.isHead ? "head" : "", selected ? "selected" : ""]
     .filter(Boolean)
@@ -155,7 +169,7 @@ function BranchRow({
     <li
       className={className}
       style={{ paddingLeft: 12 + depth * 14 }}
-      onClick={readOnly ? undefined : () => selectBranch(branch.name)}
+      onClick={readOnly || remote ? undefined : () => selectBranch(branch.name)}
       onDoubleClick={readOnly ? undefined : onCheckout}
       title={title}
     >
@@ -181,7 +195,22 @@ function BranchRow({
     </li>
   );
 
-  if (readOnly || branch.isHead) return row;
+  if (readOnly) return row;
+
+  if (remote) {
+    return (
+      <ContextMenu>
+        <ContextMenu.Trigger>{row}</ContextMenu.Trigger>
+        <ContextMenu.Content>
+          <ContextMenu.Item onSelect={onCheckout}>
+            <IconCheckout /> Checkout (crear rama local)
+          </ContextMenu.Item>
+        </ContextMenu.Content>
+      </ContextMenu>
+    );
+  }
+
+  if (branch.isHead) return row;
 
   return (
     <ContextMenu>

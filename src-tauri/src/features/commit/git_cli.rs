@@ -54,6 +54,17 @@ impl CommitPort for CommitGit {
     fn commit_diff(&self, repo: &Path, hash: &str, path: &str) -> Result<String> {
         git(repo, ["show", "--no-color", "--format=", hash, "--", path])
     }
+
+    fn range_files(&self, repo: &Path, base: &str, target: &str) -> Result<Vec<FileStatus>> {
+        let range = format!("{base}...{target}");
+        let out = git(repo, ["diff", "--no-color", "--name-status", &range])?;
+        Ok(parse_name_status(&out))
+    }
+
+    fn range_diff(&self, repo: &Path, base: &str, target: &str, path: &str) -> Result<String> {
+        let range = format!("{base}...{target}");
+        git(repo, ["diff", "--no-color", &range, "--", path])
+    }
 }
 
 /// Parsea la salida del pretty-format definido en `FMT`. Pura/testeable.

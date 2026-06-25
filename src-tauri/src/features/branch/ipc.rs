@@ -66,3 +66,14 @@ pub async fn rename_branch(
     let branch = backend.branch.clone();
     blocking(move || use_case::rename(branch.as_ref(), &PathBuf::from(repo), &old, &new)).await
 }
+
+#[tauri::command]
+pub async fn track_remote_branches(
+    backend: State<'_, Backend>,
+    repo: String,
+    remote: String,
+) -> Result<Vec<Branch>> {
+    let branch = backend.branch.clone();
+    blocking(move || use_case::track_all_remote(branch.as_ref(), &PathBuf::from(repo), &remote))
+        .await
+}

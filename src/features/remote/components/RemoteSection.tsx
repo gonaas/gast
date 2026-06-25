@@ -12,6 +12,7 @@ import {
   IconAdd,
   IconRemote,
   IconDelete,
+  IconFetch,
 } from "@/shared/ui";
 
 export function RemoteSection({ query }: { query: string }) {
@@ -19,6 +20,8 @@ export function RemoteSection({ query }: { query: string }) {
   const branches = useStore((s) => s.branches);
   const addRemote = useStore((s) => s.addRemote);
   const removeRemote = useStore((s) => s.removeRemote);
+  const checkoutRemote = useStore((s) => s.checkoutRemote);
+  const pullRemoteToLocal = useStore((s) => s.pullRemoteToLocal);
 
   const [addingRemote, setAddingRemote] = useState(false);
   const [remoteName, setRemoteName] = useState("");
@@ -63,7 +66,11 @@ export function RemoteSection({ query }: { query: string }) {
           <div key={r.name} className="remote-block">
             <ContextMenu>
               <ContextMenu.Trigger>
-                <div className="remote-head" title={`${r.url} · clic derecho para opciones`}>
+                <div
+                  className="remote-head"
+                  title={`${r.url} · doble clic para traer todas las ramas a local · clic derecho para opciones`}
+                  onDoubleClick={() => pullRemoteToLocal(r.name)}
+                >
                   <span className="branch-icon">
                     <IconRemote />
                   </span>
@@ -71,12 +78,21 @@ export function RemoteSection({ query }: { query: string }) {
                 </div>
               </ContextMenu.Trigger>
               <ContextMenu.Content>
+                <ContextMenu.Item onSelect={() => pullRemoteToLocal(r.name)}>
+                  <IconFetch /> Traer todas las ramas a local
+                </ContextMenu.Item>
+                <ContextMenu.Separator />
                 <ContextMenu.Item variant="danger" onSelect={() => removeRemote(r.name)}>
                   <IconDelete /> Eliminar remote
                 </ContextMenu.Item>
               </ContextMenu.Content>
             </ContextMenu>
-            <BranchTree node={tree} depth={1} readOnly />
+            <BranchTree
+              node={tree}
+              depth={1}
+              remote
+              onCheckout={(b) => checkoutRemote(b.name)}
+            />
           </div>
         );
       })}

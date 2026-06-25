@@ -1,9 +1,11 @@
 import type { StateCreator } from "zustand";
 import type { Store } from "./store";
 
+export type View = "changes" | "history" | "compare";
+
 export interface UiSlice {
-  view: "changes" | "history";
-  setView: (view: "changes" | "history") => void;
+  view: View;
+  setView: (view: View) => void;
 }
 
 export const createUiSlice: StateCreator<Store, [], [], UiSlice> = (set, get) => ({

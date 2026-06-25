@@ -32,3 +32,8 @@ pub fn rename(port: &dyn BranchPort, repo: &Path, old: &str, new: &str) -> Resul
     port.rename(repo, old, new)?;
     port.list(repo)
 }
+
+pub fn track_all_remote(port: &dyn BranchPort, repo: &Path, remote: &str) -> Result<Vec<Branch>> {
+    port.track_all_remote(repo, remote)?;
+    port.list(repo)
+}

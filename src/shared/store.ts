@@ -17,6 +17,7 @@ import {
 } from "@/features/integration/integration.slice";
 import { createSystemSlice, type SystemSlice } from "@/features/system/system.slice";
 import { createAssistantSlice, type AssistantSlice } from "@/features/assistant/assistant.slice";
+import { createCompareSlice, type CompareSlice } from "@/features/compare/compare.slice";
 import { createUiSlice, type UiSlice } from "./ui.slice";
 
 export type Store = RepoSlice &
@@ -31,6 +32,7 @@ export type Store = RepoSlice &
   IntegrationSlice &
   SystemSlice &
   AssistantSlice &
+  CompareSlice &
   UiSlice;
 
 export const useStore = create<Store>()((...a) => ({
@@ -46,5 +48,6 @@ export const useStore = create<Store>()((...a) => ({
   ...createIntegrationSlice(...a),
   ...createSystemSlice(...a),
   ...createAssistantSlice(...a),
+  ...createCompareSlice(...a),
   ...createUiSlice(...a),
 }));
